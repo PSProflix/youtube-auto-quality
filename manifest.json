@@ -1,11 +1,10 @@
 {
   "manifest_version": 3,
   "name": "YouTube Auto Quality",
-  "version": "1.0.0",
-  "description": "Automatically set your preferred YouTube video quality",
+  "version": "1.0.1",
+  "description": "Automatically sets the best available YouTube quality (with an optional preferred cap).",
   "permissions": [
-    "storage",
-    "scripting"
+    "storage"
   ],
   "host_permissions": [
     "https://www.youtube.com/*"
@@ -20,8 +19,5 @@
   "action": {
     "default_popup": "popup.html",
     "default_title": "YouTube Auto Quality"
-  },
-  "background": {
-    "service_worker": "background.js"
   }
 }

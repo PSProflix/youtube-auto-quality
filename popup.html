@@ -7,52 +7,67 @@
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>YouTube Auto Quality</h1>
-      <div class="toggle-container">
-        <label class="switch">
+  <div class="app">
+    <header class="header">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20.6 7.2a3 3 0 0 0-2.1-2.1C16.7 4.6 12 4.6 12 4.6s-4.7 0-6.5.5A3 3 0 0 0 3.4 7.2 31 31 0 0 0 3 12a31 31 0 0 0 .4 4.8 3 3 0 0 0 2.1 2.1c1.8.5 6.5.5 6.5.5s4.7 0 6.5-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 21 12a31 31 0 0 0-.4-4.8Z" fill="#ff0033"/>
+            <path d="M10 15.5V8.5L16 12l-6 3.5Z" fill="white"/>
+          </svg>
+        </div>
+        <div class="titles">
+          <div class="title">YouTube Auto Quality</div>
+          <div class="subtitle">Pick best available resolution</div>
+        </div>
+      </div>
+
+      <div class="toggle">
+        <span class="toggleText">Enabled</span>
+        <label class="switch" aria-label="Enable extension">
           <input type="checkbox" id="enableToggle" checked>
           <span class="slider"></span>
         </label>
-        <span class="toggle-label">Enabled</span>
       </div>
-    </div>
+    </header>
 
-    <div class="content">
-      <div class="section">
-        <label for="qualitySelect">Preferred Quality:</label>
-        <select id="qualitySelect">
-          <option value="360">360p</option>
-          <option value="480">480p</option>
-          <option value="720" selected>720p (Recommended)</option>
-          <option value="1080">1080p</option>
-          <option value="1440">1440p (2K)</option>
-          <option value="2160">2160p (4K)</option>
-        </select>
-      </div>
+    <main class="content">
+      <section class="card">
+        <div class="row">
+          <label class="label" for="qualitySelect">Preferred quality</label>
+          <select id="qualitySelect">
+            <option value="360">360p</option>
+            <option value="480">480p</option>
+            <option value="720" selected>720p</option>
+            <option value="1080">1080p</option>
+            <option value="1440">1440p (2K)</option>
+            <option value="2160">2160p (4K)</option>
+          </select>
+          <p class="hint">
+            If this exact option isn't available, the extension selects the best available quality below it.
+          </p>
+        </div>
 
-      <div class="section">
-        <p class="info-text">
-          ✓ Automatically sets your preferred YouTube video quality<br>
-          ✓ Works on video load and when changing videos<br>
-          ✓ Your preference is saved across sessions
-        </p>
-      </div>
+        <div class="buttons">
+          <button id="saveButton" class="btn primary">Save</button>
+          <button id="resetButton" class="btn ghost">Reset</button>
+        </div>
+      </section>
 
-      <div class="section">
-        <button id="saveButton" class="btn btn-primary">Save Preferences</button>
-        <button id="resetButton" class="btn btn-secondary">Reset to Default</button>
-      </div>
+      <section class="card small">
+        <ul class="bullets">
+          <li>Auto-applies on video load and when switching videos.</li>
+          <li>Preferences saved via Chrome sync storage.</li>
+          <li>No accounts, no tracking, no network requests.</li>
+        </ul>
+      </section>
 
-      <div class="section">
-        <p class="status-text" id="statusText">Ready</p>
-      </div>
-    </div>
+      <p class="status" id="statusText">Ready</p>
+    </main>
 
-    <div class="footer">
-      <p class="version">v1.0.0</p>
-    </div>
+    <footer class="footer">
+      <span class="version">v1.0.1</span>
+    </footer>
   </div>
 
   <script src="popup.js"></script>
