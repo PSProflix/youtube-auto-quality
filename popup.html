@@ -34,15 +34,25 @@
     <main class="content">
       <section class="card">
         <div class="row">
-          <label class="label" for="qualitySelect">Preferred quality</label>
-          <select id="qualitySelect">
-            <option value="360">360p</option>
-            <option value="480">480p</option>
-            <option value="720" selected>720p</option>
-            <option value="1080">1080p</option>
-            <option value="1440">1440p (2K)</option>
-            <option value="2160">2160p (4K)</option>
-          </select>
+          <label class="label" for="qualityDropdownBtn">Preferred quality</label>
+
+          <!-- Custom dropdown (avoids native white select menu) -->
+          <div class="dropdown" id="qualityDropdown">
+            <button id="qualityDropdownBtn" class="dropdownBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span class="dropdownValue" id="qualityDropdownValue">720p</span>
+              <span class="dropdownChevron" aria-hidden="true">▾</span>
+            </button>
+
+            <div id="qualityDropdownMenu" class="dropdownMenu" role="listbox" tabindex="-1" aria-label="Preferred quality">
+              <button type="button" class="dropdownItem" role="option" data-value="360">360p</button>
+              <button type="button" class="dropdownItem" role="option" data-value="480">480p</button>
+              <button type="button" class="dropdownItem" role="option" data-value="720">720p</button>
+              <button type="button" class="dropdownItem" role="option" data-value="1080">1080p</button>
+              <button type="button" class="dropdownItem" role="option" data-value="1440">1440p (2K)</button>
+              <button type="button" class="dropdownItem" role="option" data-value="2160">2160p (4K)</button>
+            </div>
+          </div>
+
           <p class="hint">
             If this exact option isn't available, the extension selects the best available quality below it.
           </p>
