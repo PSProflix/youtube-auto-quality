@@ -5,7 +5,7 @@ import zipfile
 from pathlib import Path
 
 try:
-    from PIL import Image, ImageDraw
+    from PIL import Image, ImageChops, ImageDraw, ImageFilter
 except Exception as e:
     raise SystemExit(
         "Missing dependency Pillow. Install it with: pip install -r requirements.txt"
@@ -26,32 +26,115 @@ FILES_TO_COPY = [
 ]
 
 
-def make_icon(size: int) -> Image.Image:
-    # Simple high-contrast icon: red rounded rectangle + white play triangle
+def _lerp(a: int, b: int, t: float) -> int:
+    return int(a + (b - a) * t)
+
+
+def _vertical_gradient(size: int, top: tuple[int, int, int], bottom: tuple[int, int, int]) -> Image.Image:
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
+    px = img.load()
+    for y in range(size):
+        t = y / max(1, size - 1)
+        r = _lerp(top[0], bottom[0], t)
+        g = _lerp(top[1], bottom[1], t)
+        b = _lerp(top[2], bottom[2], t)
+        for x in range(size):
+            px[x, y] = (r, g, b, 255)
+    return img
 
-    r = max(2, size // 6)
-    pad = max(1, size // 14)
 
-    # Background rounded rect
+def make_icon(size: int) -> Image.Image:
+    """Generate a clean, store-ready PNG icon.
+
+    Design:
+    - Rounded square with red/pink gradient + subtle shadow
+    - Inner border + glossy highlight
+    - White play triangle with soft shadow
+
+    Notes:
+    - Draws at a larger scale and downsamples for smoother edges.
+    """
+
+    scale = 6  # supersampling for anti-aliasing
+    s = size * scale
+
+    canvas = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+
+    pad = max(1, s // 14)
+    radius = max(8, s // 5)
+
+    # Shadow
+    shadow = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    ds = ImageDraw.Draw(shadow)
+    ds.rounded_rectangle(
+        [pad + scale, pad + int(scale * 1.2), s - pad + scale, s - pad + int(scale * 1.2)],
+        radius=radius,
+        fill=(0, 0, 0, 150),
+    )
+    shadow = shadow.filter(ImageFilter.GaussianBlur(radius=scale * 2))
+    canvas = Image.alpha_composite(canvas, shadow)
+
+    # Gradient base
+    grad = _vertical_gradient(s, top=(255, 0, 51), bottom=(255, 45, 85))
+
+    # Rounded mask
+    mask = Image.new("L", (s, s), 0)
+    dm = ImageDraw.Draw(mask)
+    dm.rounded_rectangle([pad, pad, s - pad, s - pad], radius=radius, fill=255)
+
+    base = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    base.paste(grad, (0, 0), mask=mask)
+
+    # Slight vignette
+    vignette = Image.new("L", (s, s), 0)
+    dv = ImageDraw.Draw(vignette)
+    dv.ellipse([-s * 0.2, -s * 0.25, s * 1.05, s * 0.95], fill=170)
+    vignette = vignette.filter(ImageFilter.GaussianBlur(radius=scale * 5))
+    base = ImageChops.multiply(base, Image.merge("RGBA", [vignette] * 3 + [mask]))
+
+    canvas = Image.alpha_composite(canvas, base)
+
+    d = ImageDraw.Draw(canvas)
+
+    # Inner border
     d.rounded_rectangle(
-        [pad, pad, size - pad, size - pad],
-        radius=r,
-        fill=(255, 0, 51, 255),
+        [pad + scale, pad + scale, s - pad - scale, s - pad - scale],
+        radius=max(6, radius - scale),
+        outline=(255, 255, 255, 45),
+        width=max(1, scale),
     )
 
-    # Play triangle
-    tri_pad = size * 0.28
-    x1 = tri_pad
-    y1 = tri_pad
-    x2 = tri_pad
-    y2 = size - tri_pad
-    x3 = size - tri_pad * 0.82
-    y3 = size / 2
+    # Gloss highlight (top)
+    gloss = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    dg = ImageDraw.Draw(gloss)
+    dg.rounded_rectangle(
+        [pad + int(scale * 1.2), pad + int(scale * 1.2), s - pad - int(scale * 1.2), pad + int(s * 0.55)],
+        radius=max(6, radius - scale),
+        fill=(255, 255, 255, 38),
+    )
+    gloss = gloss.filter(ImageFilter.GaussianBlur(radius=scale * 2))
+    canvas = Image.alpha_composite(canvas, gloss)
 
-    d.polygon([(x1, y1), (x2, y2), (x3, y3)], fill=(255, 255, 255, 255))
-    return img
+    # Play triangle shadow
+    tri = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    dt = ImageDraw.Draw(tri)
+    tri_pad = s * 0.30
+    x1, y1 = tri_pad, tri_pad
+    x2, y2 = tri_pad, s - tri_pad
+    x3, y3 = s - tri_pad * 0.80, s / 2
+    dt.polygon(
+        [(x1 + scale, y1 + scale), (x2 + scale, y2 + scale), (x3 + scale, y3 + scale)],
+        fill=(0, 0, 0, 140),
+    )
+    tri = tri.filter(ImageFilter.GaussianBlur(radius=scale * 1.6))
+    canvas = Image.alpha_composite(canvas, tri)
+
+    # Play triangle
+    d.polygon([(x1, y1), (x2, y2), (x3, y3)], fill=(255, 255, 255, 245))
+
+    # Downsample for smooth edges
+    out = canvas.resize((size, size), resample=Image.Resampling.LANCZOS)
+    return out
 
 
 def build_dist() -> None:
@@ -69,7 +152,7 @@ def build_dist() -> None:
     # Generate icons
     for size in (16, 48, 128):
         icon = make_icon(size)
-        icon.save(DIST / "icons" / f"icon-{size}.png", format="PNG")
+        icon.save(DIST / "icons" / f"icon-{size}.png", format="PNG", optimize=True)
 
     # Patch manifest in dist to include icons (keep repo manifest dev-friendly)
     manifest_path = DIST / "manifest.json"
