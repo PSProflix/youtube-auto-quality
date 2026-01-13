@@ -19,5 +19,18 @@
   "action": {
     "default_popup": "popup.html",
     "default_title": "YouTube Auto Quality"
-  }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "api_handler.js"
+      ],
+      "matches": [
+        "https://www.youtube.com/*"
+      ]
+    }
+  ]
 }
